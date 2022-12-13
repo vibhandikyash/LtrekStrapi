@@ -4,7 +4,8 @@
     "info": {
         "singularName": "location",
         "pluralName": "locations",
-        "displayName": "Location"
+        "displayName": "Location",
+        "description": ""
     },
     "options": {
         "draftAndPublish": true
@@ -45,7 +46,9 @@
                     "localized": true
                 }
             },
-            "required": false
+            "required": false,
+            "isSpatial": true,
+            "srid": 4326
         }
     }
 }

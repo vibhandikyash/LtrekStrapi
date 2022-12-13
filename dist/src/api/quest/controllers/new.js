@@ -1,22 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const request = require("request");
-// "@strapi/plugin-documentation": "^4.5.3",
-// "@strapi/plugin-i18n": "4.5.3",
-// "@strapi/plugin-users-permissions": "4.5.3",
-// "@strapi/provider-email-nodemailer": "^4.5.3",
-// "@strapi/strapi": "^4.5.3",
-// "@strapi/utils": "^4.5.3",
-// "pg": "8.6.0",
-// "request": "^2.88.2",
-// "strapi-plugin-postgis": "^0.1.7"
 exports.default = ({ strapi }) => ({
     async index(ctx) {
         const { lat, lng, rad } = ctx.request.query;
         const query = await strapi.db.connection.raw(`SELECT *,ST_DistanceSphere(point, ST_MakePoint(${lng},${lat})) AS air_distance FROM locations WHERE ST_DistanceSphere(point, ST_MakePoint(${lng},${lat})) <= ${rad} * 1000 ORDER BY air_distance`);
-        // const latData = query.rows.map((item) => item["latitude"]);
-        // const LngData = query.rows.map((item) => item["longitude"])
-        // return { rows: query.rows, waypoints: [latData, LngData] };
         const payload = {
             lat: lat,
             lng: lng,
@@ -237,6 +225,3 @@ exports.default = ({ strapi }) => ({
         }
     },
 });
-// SELECT *
-//       FROM locations
-//       WHERE ST_DistanceSphere(point, ST_MakePoint(${lng},${lat})) <= ${rad} * 1000
