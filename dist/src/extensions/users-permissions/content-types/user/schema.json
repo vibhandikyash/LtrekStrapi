@@ -67,6 +67,10 @@
             "type": "biginteger",
             "unique": true,
             "required": true
+        },
+        "countryCode": {
+            "type": "string",
+            "required": true
         }
     }
 }

@@ -37,6 +37,7 @@
         "args": ["geometry(POINT,4326)"]
       },
       "type": "json",
+      "default": { "type": "Point", "coordinates": [] },
       "fieldRenderer": "postgis",
       "coord_dimension": 2,
       "f_table_schema": "public",
@@ -46,7 +47,7 @@
           "localized": true
         }
       },
-      "required": false,
+      "required": true,
       "isSpatial": true,
       "srid": 4326
     }

@@ -154,7 +154,7 @@ module.exports = (plugin) => {
       });
 
     if (conflictingUserCount > 0) {
-      throw new ApplicationError("Email or Username are already taken");
+      throw new ApplicationError("Email or name are already taken");
     }
 
     if (settings.unique_email) {
@@ -165,7 +165,7 @@ module.exports = (plugin) => {
         });
 
       if (conflictingUserCount > 0) {
-        throw new ApplicationError("Email or Username are already taken");
+        throw new ApplicationError("Email or name are already taken");
       }
     }
 

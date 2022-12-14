@@ -14,6 +14,11 @@ const registerSchema = yup.object({
   email: yup.string().email().required(),
   name: yup.string().required(),
   password: yup.string().required(),
+  countryCode: yup
+    .string()
+    .required()
+    .matches(/^\+(\d{1}\-)?(\d{1,4})$/, "Invalid Country Code"),
+
   mobile: yup
     .number()
     .test(

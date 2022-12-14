@@ -108,7 +108,7 @@ module.exports = (plugin) => {
             where: { ...identifierFilter, provider },
         });
         if (conflictingUserCount > 0) {
-            throw new ApplicationError("Email or Username are already taken");
+            throw new ApplicationError("Email or name are already taken");
         }
         if (settings.unique_email) {
             const conflictingUserCount = await strapi
@@ -117,7 +117,7 @@ module.exports = (plugin) => {
                 where: { ...identifierFilter },
             });
             if (conflictingUserCount > 0) {
-                throw new ApplicationError("Email or Username are already taken");
+                throw new ApplicationError("Email or name are already taken");
             }
         }
         const newUser = {

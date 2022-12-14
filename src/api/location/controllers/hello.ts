@@ -1,15 +1,5 @@
 const request = require("request");
 
-// "@strapi/plugin-documentation": "^4.5.3",
-// "@strapi/plugin-i18n": "4.5.3",
-// "@strapi/plugin-users-permissions": "4.5.3",
-// "@strapi/provider-email-nodemailer": "^4.5.3",
-// "@strapi/strapi": "^4.5.3",
-// "@strapi/utils": "^4.5.3",
-// "pg": "8.6.0",
-// "request": "^2.88.2",
-// "strapi-plugin-postgis": "^0.1.7"
-
 export default ({ strapi }) => ({
   async index(ctx: { request: { query: { lat: any; lng: any; rad: any } } }) {
     const { lat, lng, rad } = ctx.request.query;

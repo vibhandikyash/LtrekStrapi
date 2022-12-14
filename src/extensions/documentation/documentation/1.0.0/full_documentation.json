@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2022-12-13T11:56:14.164Z"
+    "x-generation-date": "2022-12-14T11:20:02.343Z"
   },
   "x-strapi-config": {
     "path": "/documentation",
@@ -94,7 +94,9 @@
         ],
         "properties": {
           "data": {
-            "required": [],
+            "required": [
+              "point"
+            ],
             "type": "object",
             "properties": {
               "name": {
@@ -8368,6 +8370,9 @@
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
                                         },
+                                        "countryCode": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -8935,6 +8940,9 @@
                                           "type": "string",
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
+                                        },
+                                        "countryCode": {
+                                          "type": "string"
                                         },
                                         "createdAt": {
                                           "type": "string",
@@ -9537,6 +9545,9 @@
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
                                         },
+                                        "countryCode": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -10105,6 +10116,9 @@
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
                                         },
+                                        "countryCode": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -10444,6 +10458,9 @@
                                                         "type": "string",
                                                         "pattern": "^\\d*$",
                                                         "example": "123456789"
+                                                      },
+                                                      "countryCode": {
+                                                        "type": "string"
                                                       },
                                                       "createdAt": {
                                                         "type": "string",
@@ -11041,6 +11058,9 @@
                                                         "type": "string",
                                                         "pattern": "^\\d*$",
                                                         "example": "123456789"
+                                                      },
+                                                      "countryCode": {
+                                                        "type": "string"
                                                       },
                                                       "createdAt": {
                                                         "type": "string",
@@ -11672,6 +11692,9 @@
                                                         "pattern": "^\\d*$",
                                                         "example": "123456789"
                                                       },
+                                                      "countryCode": {
+                                                        "type": "string"
+                                                      },
                                                       "createdAt": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -12269,6 +12292,9 @@
                                                         "pattern": "^\\d*$",
                                                         "example": "123456789"
                                                       },
+                                                      "countryCode": {
+                                                        "type": "string"
+                                                      },
                                                       "createdAt": {
                                                         "type": "string",
                                                         "format": "date-time"
@@ -12752,7 +12778,8 @@
             "required": [
               "name",
               "email",
-              "mobile"
+              "mobile",
+              "countryCode"
             ],
             "type": "object",
             "properties": {
@@ -12798,6 +12825,9 @@
                 "type": "string",
                 "pattern": "^\\d*$",
                 "example": "123456789"
+              },
+              "countryCode": {
+                "type": "string"
               }
             }
           }
@@ -13247,6 +13277,9 @@
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
                                         },
+                                        "countryCode": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -13348,6 +13381,9 @@
                 "type": "string",
                 "pattern": "^\\d*$",
                 "example": "123456789"
+              },
+              "countryCode": {
+                "type": "string"
               },
               "createdAt": {
                 "type": "string",
@@ -13839,6 +13875,9 @@
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
                                         },
+                                        "countryCode": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -13940,6 +13979,9 @@
                 "type": "string",
                 "pattern": "^\\d*$",
                 "example": "123456789"
+              },
+              "countryCode": {
+                "type": "string"
               },
               "createdAt": {
                 "type": "string",
@@ -14464,6 +14506,9 @@
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
                                         },
+                                        "countryCode": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -14565,6 +14610,9 @@
                 "type": "string",
                 "pattern": "^\\d*$",
                 "example": "123456789"
+              },
+              "countryCode": {
+                "type": "string"
               },
               "createdAt": {
                 "type": "string",
@@ -15056,6 +15104,9 @@
                                           "pattern": "^\\d*$",
                                           "example": "123456789"
                                         },
+                                        "countryCode": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -15157,6 +15208,9 @@
                 "type": "string",
                 "pattern": "^\\d*$",
                 "example": "123456789"
+              },
+              "countryCode": {
+                "type": "string"
               },
               "createdAt": {
                 "type": "string",
