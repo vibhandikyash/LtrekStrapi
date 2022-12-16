@@ -7,7 +7,7 @@
  */
 
 import _ from "lodash";
-import utils from "@strapi/utils";
+const { utils } = require("@strapi/utils");
 const { getService } = require("../utils");
 const {
   validateCreateUserBody,

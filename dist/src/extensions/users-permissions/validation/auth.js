@@ -11,11 +11,11 @@ const registerSchema = yup.object({
     password: yup.string().required(),
     countryCode: yup
         .string()
-        .required()
         .matches(/^\+(\d{1}\-)?(\d{1,4})$/, "Invalid Country Code"),
     mobile: yup
         .number()
-        .test("len", "Invalid mobile number", (val) => val && val.toString().length === 10),
+        .integer("Invalid mobile number")
+        .test("empty or 10 character check", "Invalid mobile number", (val) => !val || val.toString().length === 10),
 });
 const sendEmailConfirmationSchema = yup.object({
     email: yup.string().email().required(),

@@ -16,15 +16,15 @@ const registerSchema = yup.object({
   password: yup.string().required(),
   countryCode: yup
     .string()
-    .required()
     .matches(/^\+(\d{1}\-)?(\d{1,4})$/, "Invalid Country Code"),
 
   mobile: yup
     .number()
+    .integer("Invalid mobile number")
     .test(
-      "len",
+      "empty or 10 character check",
       "Invalid mobile number",
-      (val) => val && val.toString().length === 10
+      (val) => !val || val.toString().length === 10
     ),
 });
 

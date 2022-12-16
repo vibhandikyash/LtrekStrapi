@@ -66,11 +66,11 @@
     "mobile": {
       "type": "biginteger",
       "unique": true,
-      "required": true
+      "required": false
     },
     "countryCode": {
       "type": "string",
-      "required": true
+      "required": false
     }
   }
 }

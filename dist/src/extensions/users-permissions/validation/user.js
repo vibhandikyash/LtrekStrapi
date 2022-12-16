@@ -9,11 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @description: A set of functions called "actions" for managing `User`.
  */
 const lodash_1 = __importDefault(require("lodash"));
-const utils_1 = __importDefault(require("@strapi/utils"));
+const { utils } = require("@strapi/utils");
 const { getService } = require("../utils");
 const { validateCreateUserBody, validateUpdateUserBody, } = require("./validation/user");
-const { sanitize } = utils_1.default;
-const { ApplicationError, ValidationError, NotFoundError } = utils_1.default.errors;
+const { sanitize } = utils;
+const { ApplicationError, ValidationError, NotFoundError } = utils.errors;
 const sanitizeOutput = (user, ctx) => {
     const schema = strapi.getModel("plugin::users-permissions.user");
     const { auth } = ctx.state;
