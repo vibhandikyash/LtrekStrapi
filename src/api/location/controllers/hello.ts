@@ -4,7 +4,7 @@ export default ({ strapi }) => ({
   async index(ctx: { request: { query: { lat: any; lng: any; rad: any } } }) {
     const { lat, lng, rad } = ctx.request.query;
     const query = await strapi.db.connection.raw(
-      `SELECT *,ST_DistanceSphere(point, ST_MakePoint(${lng},${lat})) AS air_distance FROM locations WHERE ST_DistanceSphere(point, ST_MakePoint(${lng},${lat})) <= ${rad} * 1000 ORDER BY air_distance`
+      `SELECT *,ST_DistanceSphere(ST_MakePoint(longitude,latitude), ST_MakePoint(${lng},${lat})) AS air_distance FROM locations WHERE ST_DistanceSphere(ST_MakePoint(longitude,latitude), ST_MakePoint(${lng},${lat})) <= ${rad} * 1000 ORDER BY air_distance`
     );
 
     // const latData = query.rows.map((item) => item["latitude"]);
@@ -120,15 +120,14 @@ export default ({ strapi }) => ({
     if (bearing == 0) {
       return {
         count: query.rowCount,
-        rows: query.rows,
-        xy_waypoint,
+        result: xy_waypoint,
         z: s,
         X: o,
         d: d,
         lat: p1.lat,
         lng: p1.lng,
-        maneuver: maneuver,
-        html_instructions: html_instructions,
+        // maneuver: maneuver,
+        // html_instructions: html_instructions,
         angle: angle,
       };
     }
@@ -136,14 +135,15 @@ export default ({ strapi }) => ({
     bearing = (bearing * Math.PI) / 180;
 
     return {
-      rows: query.rows,
+      count: query.rowCount,
+      result: xy_waypoint,
       z: s,
       X: o,
       d: d,
       lat: p1.lat,
       lng: p1.lng,
-      maneuver: maneuver,
-      html_instructions: html_instructions,
+      // maneuver: maneuver,
+      // html_instructions: html_instructions,
       angle: angle,
     };
 
@@ -189,36 +189,38 @@ export default ({ strapi }) => ({
 
       if (bearing == 0) {
         return {
+          ...waypoint,
           z: s,
           X: o,
           d: d,
-          lat: waypoint.lat,
-          lng: waypoint.lng,
-          name: waypoint.name,
-          image: waypoint.image,
-          rating: waypoint.rating,
-          open_time: waypoint.open_time,
-          category: waypoint.category,
-          id: waypoint.id,
-          angle: waypoint.waypoint_id,
+          // lat: waypoint.lat,
+          // lng: waypoint.lng,
+          // name: waypoint.name,
+          // image: waypoint.image,
+          // rating: waypoint.rating,
+          // open_time: waypoint.open_time,
+          // category: waypoint.category,
+          // id: waypoint.id,
+          // angle: waypoint.waypoint_id,
         };
       }
 
       bearing = (bearing * Math.PI) / 180;
 
       return {
+        ...waypoint,
         z: s * Math.cos(bearing) + o * Math.sin(bearing),
         X: -(s * Math.sin(bearing)) + o * Math.cos(bearing),
         d: d,
-        lat: waypoint.lat,
-        lng: waypoint.lng,
-        name: waypoint.name,
-        image: waypoint.image,
-        rating: waypoint.rating,
-        open_time: waypoint.open_time,
-        category: waypoint.category,
-        id: waypoint.id,
-        angle: waypoint.waypoint_id,
+        // lat: waypoint.lat,
+        // lng: waypoint.lng,
+        // name: waypoint.name,
+        // image: waypoint.image,
+        // rating: waypoint.rating,
+        // open_time: waypoint.open_time,
+        // category: waypoint.category,
+        // id: waypoint.id,
+        // angle: waypoint.waypoint_id,
       };
     }
 

@@ -7,7 +7,7 @@ export default ({ strapi }) => ({
   }) {
     const { lat, lng, rad } = ctx.request.query;
     const query = await strapi.db.connection.raw(
-      `SELECT *,ST_DistanceSphere(point, ST_MakePoint(${lng},${lat})) AS air_distance FROM locations WHERE ST_DistanceSphere(point, ST_MakePoint(${lng},${lat})) <= ${rad} * 1000 ORDER BY air_distance`
+      `SELECT *,ST_DistanceSphere(ST_MakePoint(longitude,latitude), ST_MakePoint(${lng},${lat})) AS air_distance FROM locations WHERE ST_DistanceSphere(ST_MakePoint(longitude,latitude), ST_MakePoint(${lng},${lat})) <= ${rad} * 1000 ORDER BY air_distance`
     );
     const payload = {
       lat: lat,

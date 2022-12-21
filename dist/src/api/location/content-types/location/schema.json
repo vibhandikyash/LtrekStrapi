@@ -30,26 +30,6 @@
                     "localized": true
                 }
             }
-        },
-        "point": {
-            "columnType": {
-                "type": "specificType",
-                "args": ["geometry(POINT,4326)"]
-            },
-            "type": "json",
-            "default": { "type": "Point", "coordinates": [] },
-            "fieldRenderer": "postgis",
-            "coord_dimension": 2,
-            "f_table_schema": "public",
-            "geoType": "POINT",
-            "pluginOptions": {
-                "i18n": {
-                    "localized": true
-                }
-            },
-            "required": true,
-            "isSpatial": true,
-            "srid": 4326
         }
     }
 }

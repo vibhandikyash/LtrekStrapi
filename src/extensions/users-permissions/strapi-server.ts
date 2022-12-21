@@ -10,7 +10,7 @@ const {
   validateChangePasswordBody,
 } = require("./validation/auth");
 const crypto = require("crypto");
-const _ = require("lodash");
+import _ from "lodash";
 
 const sanitizeUser = (user, ctx) => {
   const { auth } = ctx.state;
@@ -20,7 +20,52 @@ const sanitizeUser = (user, ctx) => {
 };
 
 const { getAbsoluteAdminUrl, getAbsoluteServerUrl, sanitize } = utils;
-const { ApplicationError, ValidationError } = utils.errors;
+const { contentTypes: contentTypesUtils } = require("@strapi/utils");
+const { ApplicationError, ValidationError, NotFoundError, ForbiddenError } =
+  require("@strapi/utils").errors;
+const {
+  validateCreateUserBody,
+  validateUpdateUserBody,
+} = require("./validation/user");
+
+const { UPDATED_BY_ATTRIBUTE, CREATED_BY_ATTRIBUTE } =
+  contentTypesUtils.constants;
+
+const userModel = "plugin::users-permissions.user";
+const ACTIONS = {
+  read: "plugin::content-manager.explorer.read",
+  create: "plugin::content-manager.explorer.create",
+  edit: "plugin::content-manager.explorer.update",
+  delete: "plugin::content-manager.explorer.delete",
+};
+
+const findEntityAndCheckPermissions = async (ability, action, model, id) => {
+  const entity = await strapi.query(userModel).findOne({
+    where: { id },
+    populate: [`${CREATED_BY_ATTRIBUTE}.roles`],
+  });
+
+  if (_.isNil(entity)) {
+    throw new NotFoundError();
+  }
+
+  const pm = strapi["admin"].services.permission.createPermissionsManager({
+    ability,
+    action,
+    model,
+  });
+
+  if (pm.ability.cannot(pm.action, pm.toSubject(entity))) {
+    throw new ForbiddenError();
+  }
+
+  const entityWithoutCreatorRoles = _.omit(
+    entity,
+    `${CREATED_BY_ATTRIBUTE}.roles`
+  );
+
+  return { pm, entity: entityWithoutCreatorRoles };
+};
 
 module.exports = (plugin) => {
   plugin.controllers.auth.callback = async (ctx) => {
@@ -102,7 +147,44 @@ module.exports = (plugin) => {
       throw new ApplicationError(error.message);
     }
   };
+  plugin.controllers.auth.connect = async (ctx, next) => {
+    const grant = require("grant-koa");
 
+    const providers = await strapi
+      .store({ type: "plugin", name: "users-permissions", key: "grant" })
+      .get();
+
+    const apiPrefix = strapi.config.get("api.rest.prefix");
+    const grantConfig = {
+      defaults: {
+        prefix: `${apiPrefix}/connect`,
+      },
+      ...providers,
+    };
+
+    const [requestPath] = ctx.request.url.split("?");
+    const provider = requestPath.split("/connect/")[1].split("/")[0];
+
+    if (!_.get(grantConfig[provider], "enabled")) {
+      throw new ApplicationError("This provider is disabled");
+    }
+
+    if (!strapi.config.server.url.startsWith("http")) {
+      strapi.log.warn(
+        "You are using a third party provider for login. Make sure to set an absolute url in config/server.js. More info here: https://docs.strapi.io/developer-docs/latest/plugins/users-permissions.html#setting-up-the-server-url"
+      );
+    }
+
+    // Ability to pass OAuth callback dynamically
+    grantConfig[provider].callback =
+      _.get(ctx, "query.callback") ||
+      _.get(ctx, "session.grant.dynamic.callback") ||
+      grantConfig[provider].callback;
+    grantConfig[provider].redirect_uri =
+      getService("providers").buildRedirectUri(provider);
+
+    return grant(grantConfig)(ctx, next);
+  };
   plugin.controllers.auth.register = async (ctx) => {
     const pluginStore = await strapi.store({
       type: "plugin",
@@ -136,7 +218,7 @@ module.exports = (plugin) => {
       throw new ApplicationError("Impossible to find the default role");
     }
 
-    const { email, name, provider } = params;
+    const { email, name, provider } = ctx.request.body;
 
     const identifierFilter = {
       $or: [
@@ -197,6 +279,280 @@ module.exports = (plugin) => {
       jwt,
       user: sanitizedUser,
     });
+  };
+  plugin.controllers.auth.resetPassword = async (ctx) => {
+    const { password, code } = await validateResetPasswordBody(
+      ctx.request.body
+    );
+
+    // if (password !== passwordConfirmation) {
+    //   throw new ValidationError("Passwords do not match");
+    // }
+
+    const user = await strapi
+      .query("plugin::users-permissions.user")
+      .findOne({ where: { resetPasswordToken: code } });
+
+    if (!user) {
+      throw new ValidationError("Incorrect code provided");
+    }
+
+    await getService("user").edit(user.id, {
+      resetPasswordToken: null,
+      password,
+    });
+
+    // Update the user.
+    ctx.send({
+      jwt: getService("jwt").issue({ id: user.id }),
+      user: await sanitizeUser(user, ctx),
+    });
+  };
+  plugin.controllers.auth.changePassword = async (ctx) => {
+    if (!ctx.state.user) {
+      throw new ApplicationError(
+        "You must be authenticated to reset your password"
+      );
+    }
+
+    const { currentPassword, password } = await validateChangePasswordBody(
+      ctx.request?.body
+    );
+
+    const user = await strapi.entityService.findOne(
+      "plugin::users-permissions.user",
+      ctx.state.user.id
+    );
+
+    const validPassword = await getService("user").validatePassword(
+      currentPassword,
+      user.password
+    );
+
+    if (!validPassword) {
+      throw new ValidationError("The provided current password is invalid");
+    }
+
+    if (currentPassword === password) {
+      throw new ValidationError(
+        "Your new password must be different than your current password"
+      );
+    }
+
+    await getService("user").edit(user.id, { password });
+
+    ctx.send({
+      jwt: getService("jwt").issue({ id: user.id }),
+      user: await sanitizeUser(user, ctx),
+    });
+  };
+  plugin.controllers.auth.forgotPassword = async (ctx) => {
+    const { email } = await validateForgotPasswordBody(ctx.request?.body);
+
+    const pluginStore = await strapi.store({
+      type: "plugin",
+      name: "users-permissions",
+    });
+
+    const emailSettings = await pluginStore.get({ key: "email" });
+    const advancedSettings = await pluginStore.get({ key: "advanced" });
+
+    // Find the user by email.
+    const user = await strapi
+      .query("plugin::users-permissions.user")
+      .findOne({ where: { email: email.toLowerCase() } });
+
+    if (!user || user.blocked) {
+      throw new ValidationError("Email not found!");
+    }
+
+    // Generate random token.
+    const userInfo = await sanitizeUser(user, ctx);
+
+    const resetPasswordToken = crypto.randomInt(111111, 999999).toString();
+
+    const resetPasswordSettings = _.get(
+      emailSettings,
+      "reset_password.options",
+      {}
+    );
+    const emailBody = await getService("users-permissions").template(
+      resetPasswordSettings.message,
+      {
+        URL: advancedSettings.email_reset_password,
+        SERVER_URL: getAbsoluteServerUrl(strapi.config),
+        ADMIN_URL: getAbsoluteAdminUrl(strapi.config),
+        USER: userInfo,
+        TOKEN: resetPasswordToken,
+      }
+    );
+
+    const emailObject = await getService("users-permissions").template(
+      resetPasswordSettings.object,
+      {
+        USER: userInfo,
+      }
+    );
+
+    const emailToSend = {
+      to: user.email,
+      from:
+        resetPasswordSettings.from.email || resetPasswordSettings.from.name
+          ? `${resetPasswordSettings.from.name} <${resetPasswordSettings.from.email}>`
+          : undefined,
+      replyTo: resetPasswordSettings.response_email,
+      subject: emailObject,
+      text: emailBody,
+      html: emailBody,
+    };
+
+    // NOTE: Update the user before sending the email so an Admin can generate the link if the email fails
+    await getService("user").edit(user.id, { resetPasswordToken });
+
+    // Send an email to the user.
+    await strapi.plugin("email").service("email").send(emailToSend);
+
+    ctx.send({ ok: true });
+  };
+  plugin.controllers.contentmanageruser.create = async (ctx) => {
+    const { body } = ctx.request;
+    const { user: admin, userAbility } = ctx.state;
+
+    const { email, name } = body;
+
+    const pm = strapi["admin"].services.permission.createPermissionsManager({
+      ability: userAbility,
+      action: ACTIONS.create,
+      model: userModel,
+    });
+
+    if (!pm.isAllowed) {
+      return ctx.forbidden();
+    }
+
+    const sanitizedBody = await pm.pickPermittedFieldsOf(body, {
+      subject: userModel,
+    });
+
+    const advanced = await strapi
+      .store({ type: "plugin", name: "users-permissions", key: "advanced" })
+      .get();
+
+    await validateCreateUserBody(ctx.request.body);
+
+    const userWithSameUsername = await strapi
+      .query("plugin::users-permissions.user")
+      .findOne({ where: { name } });
+
+    if (userWithSameUsername) {
+      throw new ApplicationError("Name already taken");
+    }
+
+    if (advanced.unique_email) {
+      const userWithSameEmail = await strapi
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { email: email.toLowerCase() } });
+
+      if (userWithSameEmail) {
+        throw new ApplicationError("Email already taken");
+      }
+    }
+
+    const user = {
+      ...sanitizedBody,
+      provider: "local",
+      [CREATED_BY_ATTRIBUTE]: admin.id,
+      [UPDATED_BY_ATTRIBUTE]: admin.id,
+    };
+
+    user.email = _.toLower(user.email);
+
+    if (!user.role) {
+      const defaultRole = await strapi
+        .query("plugin::users-permissions.role")
+        .findOne({ where: { type: advanced.default_role } });
+
+      user.role = defaultRole.id;
+    }
+
+    try {
+      const data = await strapi
+        .service("plugin::content-manager.entity-manager")
+        .create(user, userModel);
+      const sanitizedData = await pm.sanitizeOutput(data, {
+        action: ACTIONS.read,
+      });
+
+      ctx.created(sanitizedData);
+    } catch (error) {
+      throw new ApplicationError(error.message);
+    }
+  };
+  plugin.controllers.contentmanageruser.update = async (ctx) => {
+    const { id } = ctx.params;
+    const { body } = ctx.request;
+    const { user: admin, userAbility } = ctx.state;
+
+    const advancedConfigs = await strapi
+      .store({ type: "plugin", name: "users-permissions", key: "advanced" })
+      .get();
+
+    const { email, name, password } = body;
+
+    const { pm, entity } = await findEntityAndCheckPermissions(
+      userAbility,
+      ACTIONS.edit,
+      userModel,
+      id
+    );
+    const user = entity;
+
+    await validateUpdateUserBody(ctx.request.body);
+
+    if (_.has(body, "password") && !password && user.provider === "local") {
+      throw new ValidationError("password.notNull");
+    }
+
+    if (_.has(body, "name")) {
+      const userWithSameUsername = await strapi
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { name } });
+
+      if (
+        userWithSameUsername &&
+        _.toString(userWithSameUsername.id) !== _.toString(id)
+      ) {
+        throw new ApplicationError("Name already taken");
+      }
+    }
+
+    if (_.has(body, "email") && advancedConfigs.unique_email) {
+      const userWithSameEmail = await strapi
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { email: _.toLower(email) } });
+
+      if (
+        userWithSameEmail &&
+        _.toString(userWithSameEmail.id) !== _.toString(id)
+      ) {
+        throw new ApplicationError("Email already taken");
+      }
+      body.email = _.toLower(body.email);
+    }
+
+    const sanitizedData = await pm.pickPermittedFieldsOf(body, {
+      subject: pm.toSubject(user),
+    });
+    const updateData = _.omit(
+      { ...sanitizedData, updatedBy: admin.id },
+      "createdBy"
+    );
+
+    const data = await strapi
+      .service("plugin::content-manager.entity-manager")
+      .update({ id }, updateData, userModel);
+
+    ctx.body = await pm.sanitizeOutput(data, { action: ACTIONS.read });
   };
 
   return plugin;

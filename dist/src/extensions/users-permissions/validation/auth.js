@@ -1,6 +1,5 @@
 "use strict";
 const { yup, validateYupSchema } = require("@strapi/utils");
-const phoneRegExp = /^(\+?\d{0,4})?\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{3}\)?)\s?-?\s?(\(?\d{4}\)?)?$/;
 const callbackSchema = yup.object({
     email: yup.string().email().required(),
     password: yup.string().required(),
@@ -31,7 +30,7 @@ const forgotPasswordSchema = yup
 const resetPasswordSchema = yup
     .object({
     password: yup.string().required(),
-    passwordConfirmation: yup.string().required(),
+    // passwordConfirmation: yup.string().required(),
     code: yup.string().required(),
 })
     .noUnknown();
