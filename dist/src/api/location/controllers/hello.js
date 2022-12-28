@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const request = require("request");
 exports.default = ({ strapi }) => ({
     async index(ctx) {
-        const { lat, lng, rad, brng } = ctx.request.query;
+        const { lat, lng, lat1, lng1, rad, brng } = ctx.request.query;
         const query = await strapi.db.connection.raw(`SELECT *,ST_DistanceSphere(ST_MakePoint(longitude,latitude), ST_MakePoint(${lng},${lat})) AS air_distance FROM locations WHERE ST_DistanceSphere(ST_MakePoint(longitude,latitude), ST_MakePoint(${lng},${lat})) <= ${rad} * 1000 ORDER BY air_distance`);
         // const latData = query.rows.map((item) => item["latitude"]);
         // const LngData = query.rows.map((item) => item["longitude"])
@@ -11,8 +11,8 @@ exports.default = ({ strapi }) => ({
         const payload = {
             lat: lat,
             lng: lng,
-            lat1: 23.0146,
-            lng1: 72.5306,
+            lat1: lat1,
+            lng1: lng1,
             bearing: brng,
         };
         var data = await getDirectionDataFromGoogle(payload);

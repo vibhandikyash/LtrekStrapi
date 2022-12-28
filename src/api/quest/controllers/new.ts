@@ -22,17 +22,6 @@ export default ({ strapi }) => ({
       query.rows.some((o2) => o1.id === o2.id)
     );
 
-    // const merge = (query, result) => {
-    //   for (let i = 0; i < result.length; i++) {
-    //     if (query.rows[i].id === result[i].id) {
-    //       query.rows.push(result[i].locations);
-    //     }
-    //   }
-    //   return query;
-    // };
-
-    // merge(query, result);
-
     const results = query.rows.map((item) =>
       result.find((g) => g.id == item.id)
         ? { ...item, locations: result.find((g) => g.id == item.id).locations }
